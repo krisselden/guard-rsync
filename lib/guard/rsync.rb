@@ -18,8 +18,11 @@ module Guard
     # @option options [Hash] :excludes the map of excludes patterns in the
     #         input directory to exclude files in the output directory.
     def initialize(watchers = [], options = { })
-      @input = options[:input]
+      @input = ensure_no_trailing_slash(options[:input])
       @output = options[:output]
+      raise 'input must be a directory' unless File.directory? @input
+      raise 'output must be a directory' unless File.directory? @output
+      @dirname = File.basename(@input)
       @excludes = options[:excludes]
       @run_group_on_start = options[:run_group_on_start]
       super
@@ -54,8 +57,8 @@ module Guard
           @excludes.each do |pattern, transform|
             matches = file.match(pattern)
             if matches
-              input_excludes << file
-              output_excludes << "/#{transform.call(matches)}" if transform
+              input_excludes << File.join('/', @dirname, file)
+              output_excludes << File.join('/', @dirname, transform.call(matches)) if transform
             end
           end
         end
@@ -64,7 +67,10 @@ module Guard
       begin
         exclude_file.puts(input_excludes)
         exclude_file.puts(output_excludes)
-        exclude_file.puts(::Guard.listener.ignore_paths)
+        ::Guard.listener.ignore_paths.each do |dir|
+          next if dir == '.' or dir == '..'
+          exclude_file.puts(ensure_trailing_slash(File.basename(dir)))
+        end
         exclude_file.flush
         UI.info `rsync -av --delete --exclude-from "#{exclude_file.path}" "#{@input}" "#{@output}"`
         success = $?.success?
@@ -75,6 +81,15 @@ module Guard
       end
     end
 
+    private
+    def ensure_trailing_slash(path)
+      path.gsub(/(.*[^\/])\Z/,'\1/')
+    end
+
+    def ensure_no_trailing_slash(path)
+      path.gsub(/\/\Z/,'')
+    end
   end
+
 end
 
