@@ -55,7 +55,7 @@ module Guard
             matches = file.match(pattern)
             if matches
               input_excludes << file
-              output_excludes << transform.call(matches) if transform
+              output_excludes << "/#{transform.call(matches)}" if transform
             end
           end
         end
