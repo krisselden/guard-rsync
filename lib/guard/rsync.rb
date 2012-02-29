@@ -21,7 +21,7 @@ module Guard
       @input = ensure_no_trailing_slash(options[:input])
       @output = options[:output]
       raise 'input must be a directory' unless File.directory? @input
-      raise 'output must be a directory' unless File.directory? @output or @output =~ /^.*@.*:.*$/
+      raise 'output must be a directory' unless File.directory? @output or @output =~ /^.*:.*$/
       @dirname = File.basename(@input)
       @excludes = options[:excludes]
       @run_group_on_start = options[:run_group_on_start]
