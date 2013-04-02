@@ -67,10 +67,6 @@ module Guard
       begin
         exclude_file.puts(input_excludes)
         exclude_file.puts(output_excludes)
-        ::Guard.listener.ignore_paths.each do |dir|
-          next if dir == '.' or dir == '..'
-          exclude_file.puts(ensure_trailing_slash(File.basename(dir)))
-        end
         exclude_file.flush
         UI.info `rsync -av --delete --exclude-from "#{exclude_file.path}" "#{@input}" "#{@output}"`
         success = $?.success?
@@ -82,10 +78,6 @@ module Guard
     end
 
     private
-    def ensure_trailing_slash(path)
-      path.gsub(/(.*[^\/])\Z/,'\1/')
-    end
-
     def ensure_no_trailing_slash(path)
       path.gsub(/\/\Z/,'')
     end
