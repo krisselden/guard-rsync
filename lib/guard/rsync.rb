@@ -2,6 +2,8 @@ require 'guard'
 require 'guard/guard'
 require 'guard/watcher'
 require 'tempfile'
+require 'open3'
+require 'io/wait'
 
 module Guard
 
@@ -68,9 +70,9 @@ module Guard
         exclude_file.puts(input_excludes)
         exclude_file.puts(output_excludes)
         exclude_file.flush
-        UI.info `rsync -av --delete --exclude-from "#{exclude_file.path}" "#{@input}" "#{@output}"`
-        success = $?.success?
-        return success
+
+        cmd = rsync_cmd(exclude_file)
+        return run_cmd(cmd)
       ensure
         exclude_file.close
         exclude_file.unlink
@@ -78,6 +80,35 @@ module Guard
     end
 
     private
+    def rsync_cmd(exclude_file)
+      cmd = %w(rsync -av --delete)
+      cmd += ['--exclude-from', exclude_file.path ]
+      cmd += [ @input, @output ]
+      cmd
+    end
+
+    def run_cmd(cmd)
+      UI.info "running: #{cmd.join ' '}"
+      Open3.popen3(*cmd) do |stdin, stdout, stderr, wait_thread|
+        stdin.close
+        readers = [stdout, stderr]
+        while not readers.empty?
+          rs, = IO.select(readers)
+          break if rs.empty?
+          rs.each do |r|
+            begin
+              got = r.readpartial(1024)
+              out = (r == stdout) ? $stdout : $stderr
+              out.print got
+            rescue EOFError
+              readers.delete_if { |s| r == s }
+            end
+          end
+        end
+        wait_thread.value.success?
+      end
+    end
+
     def ensure_no_trailing_slash(path)
       path.gsub(/\/\Z/,'')
     end
