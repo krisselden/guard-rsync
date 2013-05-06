@@ -22,6 +22,7 @@ module Guard
     def initialize(watchers = [], options = { })
       @input = ensure_no_trailing_slash(options[:input])
       @output = options[:output]
+      @delete = options[:delete] || false
       raise 'input must be a directory' unless File.directory? @input
       raise 'output must be a directory' unless File.directory? @output or @output =~ /^.*:.*$/
       @dirname = File.basename(@input)
@@ -81,7 +82,8 @@ module Guard
 
     private
     def rsync_cmd(exclude_file)
-      cmd = %w(rsync -av --delete)
+      cmd = %w(rsync -av)
+      cmd.push '--delete' if @delete
       cmd += ['--exclude-from', exclude_file.path ]
       cmd += [ @input, @output ]
       cmd
