@@ -53,30 +53,9 @@ module Guard
     # @param [Array<String>] paths the changed paths and files
     # @return [Boolean] rsync was successful
     def run_on_change(paths)
-      input_excludes = []
-      output_excludes = []
-      Dir.chdir(@input) do
-        Dir.glob('**/*').each do |file|
-          @excludes.each do |pattern, transform|
-            matches = file.match(pattern)
-            if matches
-              input_excludes << File.join('/', @dirname, file)
-              output_excludes << File.join('/', @dirname, transform.call(matches)) if transform
-            end
-          end
-        end
-      end
-      exclude_file = Tempfile.new('exclude')
-      begin
-        exclude_file.puts(input_excludes)
-        exclude_file.puts(output_excludes)
-        exclude_file.flush
-
+      with_exclude_file do |exclude_file|
         cmd = rsync_cmd(exclude_file)
         return run_cmd(cmd)
-      ensure
-        exclude_file.close
-        exclude_file.unlink
       end
     end
 
@@ -109,6 +88,33 @@ module Guard
         end
         wait_thread.value.success?
       end
+    end
+
+    def with_exclude_file
+      exclude_file = Tempfile.new('exclude')
+      begin
+        exclude_file.puts(get_excludes)
+        exclude_file.close
+        yield exclude_file
+      ensure
+        exclude_file.unlink
+      end
+    end
+
+    def get_excludes
+      excludes = []
+      Dir.chdir(@input) do
+        Dir.glob('**/*').each do |file|
+          @excludes.each do |pattern, transform|
+            matches = file.match(pattern)
+            if matches
+              excludes << File.join('/', @dirname, file)
+              excludes << File.join('/', @dirname, transform.call(matches)) if transform
+            end
+          end
+        end
+      end
+      excludes
     end
 
     def ensure_no_trailing_slash(path)
