@@ -72,8 +72,8 @@ module Guard
         success = $?.success?
         return success
       ensure
-         exclude_file.close
-         exclude_file.unlink
+        exclude_file.close
+        exclude_file.unlink
       end
     end
 
