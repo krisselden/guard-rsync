@@ -37,9 +37,7 @@ group(:build_my_app) do
   guard('rsync', {
     :input => 'apps_src/my_app',
     :output => 'apps',
-    :excludes => {
-      /(.+)\.coffee$/ => (lambda {|m| "#{m[1]}.js"})
-    },
+    :excludes => [ '*.coffee', '*.js' ],
     :run_group_on_start => true
   }) do
     watch(%r{^apps_src/my_app/(.+\.(?!coffee)(.*)|[^.]+)$})

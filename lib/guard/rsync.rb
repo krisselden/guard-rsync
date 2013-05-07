@@ -17,8 +17,7 @@ module Guard
     # @param [Hash] options the options for the Guard
     # @option options [String] :input the input directory
     # @option options [String] :output the output directory
-    # @option options [Hash] :excludes the map of excludes patterns in the
-    #         input directory to exclude files in the output directory.
+    # @option options [Array]  :excludes the list of rsync exclude patterns
     def initialize(watchers = [], options = { })
       @input = ensure_no_trailing_slash(options[:input])
       @output = options[:output]
@@ -27,6 +26,9 @@ module Guard
       raise 'output must be a directory' unless File.directory? @output or @output =~ /^.*:.*$/
       @dirname = File.basename(@input)
       @excludes = options[:excludes]
+      if @excludes.is_a? Hash
+        raise ":excludes option is no longer a Hash; please check the README"
+      end
       @run_group_on_start = options[:run_group_on_start]
       super
     end
@@ -94,28 +96,12 @@ module Guard
     def with_exclude_file
       exclude_file = Tempfile.new('exclude')
       begin
-        exclude_file.puts(get_excludes)
+        exclude_file.puts(@excludes)
         exclude_file.close
         yield exclude_file
       ensure
         exclude_file.unlink
       end
-    end
-
-    def get_excludes
-      excludes = []
-      Dir.chdir(@input) do
-        Dir.glob('**/*').each do |file|
-          @excludes.each do |pattern, transform|
-            matches = file.match(pattern)
-            if matches
-              excludes << File.join('/', @dirname, file)
-              excludes << File.join('/', @dirname, transform.call(matches)) if transform
-            end
-          end
-        end
-      end
-      excludes
     end
 
     def ensure_no_trailing_slash(path)
