@@ -5,8 +5,8 @@ require 'tempfile'
 
 module Guard
 
-  # The CoffeeScript guard that gets notifications about the following
-  # Guard events: `start`, `stop`, `reload`, `run_all` and `run_on_change`.
+  # The guard gets notifications about the following Guard events:
+  # `start`, `stop`, `reload`, `run_all` and `run_on_change`.
   #
   class Rsync < Guard
     # Initialize Guard::Sync.
