@@ -48,11 +48,12 @@ module Guard
       run_on_change([])
     end
 
-    # Gets called when watched paths and files have changes.
+    # Gets called when watched paths and files are modified or added,
+    # but *not* on removals (unlike run_on_changes - note the extra 's')
     #
-    # @param [Array<String>] paths the changed paths and files
+    # @param [Array<String>] changed_paths the changed paths and files
     # @return [Boolean] rsync was successful
-    def run_on_change(paths)
+    def run_on_change(changed_paths)
       with_exclude_file do |exclude_file|
         cmd = rsync_cmd(exclude_file)
         return run_cmd(cmd)
