@@ -55,7 +55,7 @@ module Guard
     # @param [Array<String>] changed_paths the changed paths and files
     # @return [Boolean] rsync was successful
     def run_on_change(changed_paths)
-      with_exclude_file do |exclude_file|
+      with_exclude_file(@excludes) do |exclude_file|
         cmd = rsync_cmd(exclude_file)
         return run_cmd(cmd)
       end
@@ -92,10 +92,10 @@ module Guard
       end
     end
 
-    def with_exclude_file
+    def with_exclude_file(excludes)
       exclude_file = Tempfile.new('exclude')
       begin
-        exclude_file.puts(@excludes)
+        exclude_file.puts(excludes)
         exclude_file.close
         yield exclude_file
       ensure
