@@ -38,7 +38,7 @@ module Guard
       run_all
       if @run_group_on_start
         ::Guard.guards.each do |guard|
-          guard.run_all if self != guard && group == guard.group
+          guard.run_all if ! guard.is_a?(::Guard::Rsync) && group == guard.group
         end
       end
     end
