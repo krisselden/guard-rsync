@@ -47,7 +47,7 @@ module Guard
     #
     # @return [Boolean] rsync was successful
     def run_all
-      run_on_change([])
+      standard_rsync
     end
 
     # Gets called when watched paths and files are modified or added,
@@ -56,11 +56,8 @@ module Guard
     # @param [Array<String>] changed_paths the changed paths and files
     # @return [Boolean] rsync was successful
     def run_on_change(changed_paths)
-      with_exclude_file(@excludes) do |exclude_file|
-        extra = @delete ? ['--delete'] : [ ]
-        cmd = rsync_cmd(exclude_file, extra)
-        return run_cmd(cmd)
-      end
+      extra = @delete ? ['--delete'] : []
+      standard_rsync(extra + ['-v'])
     end
 
     # Called on file(s) removals that the Guard plugin watches.
@@ -82,17 +79,25 @@ module Guard
         acc
       end
 
-      with_exclude_file(includes.to_a + [ '- *' ]) do |exclude_file|
-        cmd = rsync_cmd(exclude_file, [ '--delete' ])
+      with_exclude_file(includes.to_a + ['- *']) do |exclude_file|
+        cmd = rsync_cmd(exclude_file, ['-v', '--delete'])
         return run_cmd(cmd)
       end
     end
 
     private
+
+    def standard_rsync(extra=[])
+      with_exclude_file(@excludes) do |exclude_file|
+        cmd = rsync_cmd(exclude_file, extra)
+        return run_cmd(cmd)
+      end
+    end
+
     def rsync_cmd(exclude_file, extra)
       cmd = %w(rsync -a) + @extra + extra
-      cmd += ['--exclude-from', exclude_file.path ]
-      cmd += [ @input, @output ]
+      cmd += ['--exclude-from', exclude_file.path]
+      cmd += [@input, @output]
       cmd
     end
 
