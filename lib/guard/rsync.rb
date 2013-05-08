@@ -90,7 +90,7 @@ module Guard
 
     private
     def rsync_cmd(exclude_file, extra)
-      cmd = %w(rsync -av) + @extra + extra
+      cmd = %w(rsync -a) + @extra + extra
       cmd += ['--exclude-from', exclude_file.path ]
       cmd += [ @input, @output ]
       cmd
