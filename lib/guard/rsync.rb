@@ -22,7 +22,7 @@ module Guard
       @input = options[:input]
       @output = options[:output]
       @delete = options[:delete] || false
-      raise 'output must be a directory' unless File.directory? @output or @output =~ /^.*:.*$/
+      raise "output #{@output} is not a directory" unless File.directory? @output or @output =~ /^.*:.*$/
       @dirname = File.basename(@input)
       @excludes = options[:excludes]
       if @excludes.is_a? Hash
