@@ -19,7 +19,7 @@ module Guard
     # @option options [String] :output the output directory
     # @option options [Array]  :excludes the list of rsync exclude patterns
     def initialize(watchers = [], options = { })
-      @input = ensure_no_trailing_slash(options[:input])
+      @input = options[:input]
       @output = options[:output]
       @delete = options[:delete] || false
       raise 'input must be a directory' unless File.directory? @input
@@ -102,10 +102,6 @@ module Guard
       ensure
         exclude_file.unlink
       end
-    end
-
-    def ensure_no_trailing_slash(path)
-      path.gsub(/\/\Z/,'')
     end
   end
 
