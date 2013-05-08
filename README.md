@@ -38,6 +38,7 @@ group(:build_my_app) do
     :input => 'apps_src/my_app',
     :output => 'apps',
     :excludes => [ '*.coffee', '*.js' ],
+    :extra => [ '--bwlimit=50' ],
     :run_group_on_start => true
   }) do
     watch(%r{^apps_src/my_app/(.+\.(?!coffee)(.*)|[^.]+)$})

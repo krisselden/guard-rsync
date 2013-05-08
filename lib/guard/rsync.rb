@@ -28,6 +28,7 @@ module Guard
       if @excludes.is_a? Hash
         raise ":excludes option is no longer a Hash; please check the README"
       end
+      @extra = options[:extra] || []
       @run_group_on_start = options[:run_group_on_start]
       super
     end
@@ -56,15 +57,15 @@ module Guard
     # @return [Boolean] rsync was successful
     def run_on_change(changed_paths)
       with_exclude_file(@excludes) do |exclude_file|
-        cmd = rsync_cmd(exclude_file)
+        extra = @delete ? ['--delete'] : [ ]
+        cmd = rsync_cmd(exclude_file, extra)
         return run_cmd(cmd)
       end
     end
 
     private
-    def rsync_cmd(exclude_file)
-      cmd = %w(rsync -av)
-      cmd.push '--delete' if @delete
+    def rsync_cmd(exclude_file, extra)
+      cmd = %w(rsync -av) + @extra + extra
       cmd += ['--exclude-from', exclude_file.path ]
       cmd += [ @input, @output ]
       cmd
