@@ -63,6 +63,31 @@ module Guard
       end
     end
 
+    # Called on file(s) removals that the Guard plugin watches.
+    #
+    # @param [Array<String>] removed_paths the removed files or paths
+    # @raise [:task_has_failed] when run_on_removals has failed
+    # @return [Boolean] whether rsync was successful
+    #
+    def run_on_removals(removed_paths)
+      # We remove via rsync --delete by including the removed file(s)
+      # and excluding '*'.  However, if a file 'foo/bar/baz.rb' is
+      # removed, then we need not only '+ /foo/bar/baz.rb' but also '+
+      # /foo' and '+ /bar', as documented under the "INCLUDE/EXCLUDE
+      # PATTERN RULES" section of the rsync(1) man page.
+      includes = removed_paths.inject(Set.new) do |acc, path|
+        rel_path = path.sub(@input, '')
+        # Annoyingly, Pathname#descend returns nil
+        Pathname.new(rel_path).descend { |p| acc.add "+ #{p}" }
+        acc
+      end
+
+      with_exclude_file(includes.to_a + [ '- *' ]) do |exclude_file|
+        cmd = rsync_cmd(exclude_file, [ '--delete' ])
+        return run_cmd(cmd)
+      end
+    end
+
     private
     def rsync_cmd(exclude_file, extra)
       cmd = %w(rsync -av) + @extra + extra
