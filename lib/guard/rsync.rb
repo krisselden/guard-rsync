@@ -23,7 +23,7 @@ module Guard
       raise 'input must be a directory' unless File.directory? @input
       raise 'output must be a directory' unless File.directory? @output or @output =~ /^.*:.*$/
       @dirname = File.basename(@input)
-      @excludes = options[:excludes]
+      @excludes = options[:excludes] || {}
       @run_group_on_start = options[:run_group_on_start]
       super
     end
